@@ -5,39 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
-const ENABLE_LOGGING = true
-
 const recentPkgFileName = "pm-tui_recent_pkgs"
-
-var logFile *os.File
-
-func InitLog() {
-	var err error
-	if ENABLE_LOGGING {
-		logFile, err = os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		if err != nil {
-			panic(err)
-		}
-
-		logFile.Write([]byte{})
-	}
-}
-
-func DestroyLog() {
-	if ENABLE_LOGGING {
-		logFile.Close()
-	}
-}
-
-func Log(format string, args ...any) {
-	if !ENABLE_LOGGING || logFile == nil {
-		return
-	}
-	fmt.Fprintf(logFile, "[%s] %s\n", time.Now().Format("15:04:05.000"), fmt.Sprintf(format, args...))
-}
 
 func AddRecentPkg(name string) {
 	path := filepath.Join(os.TempDir(), recentPkgFileName)
