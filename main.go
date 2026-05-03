@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/textinput"
@@ -21,6 +22,7 @@ type model struct {
 	state         AppState
 	selectedPkg   string
 	isShowingInfo bool
+	pendingTick   bool
 
 	listView list.Model
 	input    textinput.Model
@@ -34,6 +36,7 @@ func (m model) ClearState() model {
 	m.viewport = viewport.New()
 	m.selectedPkg = ""
 	m.modalContent = ""
+	m.pendingTick = false
 	m.isShowingInfo = false
 	m.listView = NewListView([]list.Item{}, 0, 0)
 	m.input = NewSearchView(m.width)
@@ -47,7 +50,14 @@ func (m model) Init() tea.Cmd {
 }
 
 func initialModel() model {
-	provider := ProviderPacman
+	providers := listAvailableProviders()
+	if len(providers) == 0 {
+		fmt.Println("No supported proviers were found. Supported providers are:\n", strings.Join(supportedProviders(), "\n"))
+		os.Exit(1)
+	}
+
+	provider := GetProviderType(providers[0])
+
 	return model{
 		pm:            NewPackageManager(provider),
 		provider:      provider,

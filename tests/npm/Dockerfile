@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM node:24
 
 RUN apt-get update
 RUN apt-get install -y wget git gcc sudo
@@ -13,12 +13,16 @@ RUN tar -C /usr/local -xzf "/tmp/go${GO_VERSION}.linux-amd64.tar.gz"
 RUN rm "/tmp/go${GO_VERSION}.linux-amd64.tar.gz"
 
 ENV PATH /go/bin:/usr/local/go/bin:$PATH
-
+ 
 # project setup
 WORKDIR /pm
 
 COPY go.mod go.sum ./
+COPY tests/npm/package.json  ./
 
 RUN go mod download
 
-CMD go run .
+WORKDIR /pm/tests/npm
+RUN npm i
+
+CMD go run ../..

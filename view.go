@@ -34,7 +34,7 @@ func (m model) View() tea.View {
 	} else {
 		switch m.state {
 		case StateShowInput:
-			b.WriteString(SearchView(m.input))
+			b.WriteString(SearchView(m.input, m.listView))
 
 		case StateListSearchResults, StateListInstalled, StateListProviders, StateListMenuActions, StateListRecent:
 			b.WriteString(lipgloss.JoinVertical(lipgloss.Left, m.listView.View(), footer(m)))

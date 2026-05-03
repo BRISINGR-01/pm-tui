@@ -36,6 +36,10 @@ func NewListView(items []list.Item, w, h int) list.Model {
 	l.SetShowTitle(false)
 	l.SetShowHelp(false)
 	l.SetHeight(l.Height() - 1)
+	l.DisableQuitKeybindings()
+	if len(items) == 0 {
+		l.SetShowStatusBar(false)
+	}
 
 	return l
 }

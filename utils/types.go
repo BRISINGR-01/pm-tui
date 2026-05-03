@@ -35,6 +35,7 @@ type PkgInfoMsg struct {
 	Err     error
 }
 
+type SearchThrottleMsg struct{}
 type ClearModalMsg struct{}
 type ModalMsg struct{ Text string }
 

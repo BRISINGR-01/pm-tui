@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	. "pm-tui/package_manager"
 	. "pm-tui/utils"
 
@@ -47,7 +48,7 @@ func LoadRecent(m model) (model, tea.Cmd) {
 func LoadProviders(m model) (model, tea.Cmd) {
 	m = m.ClearState()
 	m.state = StateListProviders
-	return m, LoadList(filterAvailableProviders([]string{"pacman", "yay", "npm", "npm (global)", "pip", "apt"}))
+	return m, LoadList(listAvailableProviders())
 }
 
 func LoadInfo(m model) (model, tea.Cmd) {
@@ -63,15 +64,37 @@ func LoadInfo(m model) (model, tea.Cmd) {
 	}
 }
 
-func filterAvailableProviders(providers []string) []string {
-	filtered := []string{}
+func supportedProviders() []string {
+	return []string{"pacman", "yay", "npm", "npm (global)", "pip", "poetry", "apt"}
+}
+
+func listAvailableProviders() []string {
+	providers := supportedProviders()
+	var filtered []string
 
 	for _, provider := range providers {
-		_, err := NewPackageManager(GetProviderType(provider)).IsInstalled("")
+		switch provider {
 
-		if err == nil {
-			filtered = append(filtered, provider)
+		case "npm":
+			err := exec.Command("npm", "pkg", "get").Run()
+
+			if err != nil {
+				continue
+			}
+		case "npm (global)":
+			_, err := exec.LookPath("npm")
+			if err != nil {
+				continue
+			}
+		default:
+			_, err := exec.LookPath(provider)
+			if err != nil {
+				continue
+			}
 		}
+
+		filtered = append(filtered, provider)
+
 	}
 
 	return filtered

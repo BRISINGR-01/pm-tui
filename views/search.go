@@ -3,6 +3,7 @@ package views
 import (
 	"strings"
 
+	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
 
@@ -19,7 +20,7 @@ func NewSearchView(w int) textinput.Model {
 	return ti
 }
 
-func SearchView(input textinput.Model) string {
+func SearchView(input textinput.Model, list list.Model) string {
 	var b strings.Builder
 
 	inputBox := lipgloss.NewStyle().
@@ -28,7 +29,8 @@ func SearchView(input textinput.Model) string {
 		Padding(0, 1).
 		Render(input.View())
 
-	b.WriteString(inputBox + "\n\n")
+	b.WriteString(inputBox)
+	b.WriteString(list.View())
 
 	return b.String()
 }

@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"pm-tui/package_manager"
 	. "pm-tui/utils"
@@ -25,21 +27,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		updated, cmd := handleKeyPress(m, msg)
-		m = updated.(model)
-		cmds = append(cmds, cmd)
 
 		m.viewport, cmd = m.viewport.Update(msg)
 		cmds = append(cmds, cmd)
 		m.input, cmd = m.input.Update(msg)
 		cmds = append(cmds, cmd)
 
-		if m.state == StateShowInput || msg.String() == "esc" {
-			return m, tea.Batch(cmds...)
+		updated, cmd := handleKeyPress(m, msg)
+		m = updated.(model)
+		cmds = append(cmds, cmd)
+
+		if m.state != StateShowInput {
+			m.listView, cmd = m.listView.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 
-		m.listView, cmd = m.listView.Update(msg)
-		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 
 	case tea.WindowSizeMsg:
@@ -70,6 +72,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ClearModalMsg:
 		m.modalContent = ""
 		return m, nil
+	case SearchThrottleMsg:
+		m.pendingTick = false
+		items, err := m.pm.SearchForPackage(strings.TrimSpace(m.input.Value()))
+		if err != nil {
+			return m, showModal(err.Error())
+		}
+
+		return m, LoadSearchResults(items)
 	}
 
 	m.listView, cmd = m.listView.Update(msg)
@@ -126,6 +136,7 @@ func handleMenuChoice(m model, choice string) (tea.Model, tea.Cmd) {
 
 	case "Install new":
 		m.state = StateShowInput
+		m.listView = NewListView([]list.Item{}, m.width, m.height)
 		return m, nil
 
 	case "Update system":
@@ -145,6 +156,27 @@ func handleMenuChoice(m model, choice string) (tea.Model, tea.Cmd) {
 }
 
 func handleKeyPress(m model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.state == StateShowInput {
+		switch msg.String() {
+		case "enter":
+			m.state = StateListSearchResults
+			return m, nil
+		case "esc":
+			return LoadActions(m)
+		}
+
+		if len(m.input.Value()) == 0 {
+			return m, LoadSearchResults([]package_manager.SearchResult{})
+		}
+
+		if !m.pendingTick {
+			m.pendingTick = true
+			return m, throttle()
+		}
+
+		return m, nil
+	}
+
 	switch {
 	case key.Matches(msg, m.listView.KeyMap.CursorUp):
 		if m.listView.Index() == 0 {
@@ -184,17 +216,6 @@ func handleKeyPress(m model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		if m.state == StateShowInput {
-			items, err := m.pm.SearchForPackage(strings.TrimSpace(m.input.Value()))
-			if err != nil {
-				return m, showModal(err.Error())
-			}
-
-			m.state = StateListSearchResults
-			m.input = NewSearchView(m.width)
-			return m, LoadSearchResults(items)
-		}
-
 		if m.listView.SelectedItem() == nil {
 			return m, nil
 		}
@@ -209,9 +230,8 @@ func handleKeyPress(m model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		return LoadActions(m)
-
 	case "q":
-		if m.state == StateListMenuActions && m.listView.FilterState() != list.Filtering {
+		if m.listView.FilterState() != list.Filtering {
 			return m, tea.Quit
 		}
 	}
@@ -228,7 +248,8 @@ func showModal(msg string) tea.Cmd {
 
 func run(cmd *exec.Cmd, msg string) tea.Cmd {
 	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
 
 	return tea.Sequence(
 		tea.ExecProcess(cmd, func(err error) tea.Msg {
@@ -245,5 +266,11 @@ func run(cmd *exec.Cmd, msg string) tea.Cmd {
 func clearUI() tea.Cmd {
 	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
 		return ClearModalMsg{}
+	})
+}
+
+func throttle() tea.Cmd {
+	return tea.Tick(SearchThrottle, func(t time.Time) tea.Msg {
+		return SearchThrottleMsg{}
 	})
 }

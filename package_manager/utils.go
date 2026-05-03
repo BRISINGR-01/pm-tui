@@ -10,6 +10,25 @@ import (
 	. "pm-tui/utils"
 )
 
+type ProviderType int
+
+const (
+	ProviderPacman ProviderType = iota
+	ProviderYay
+	ProviderApt
+	ProviderNpm
+	ProviderNpmGlobal
+	ProviderPip
+	ProviderPoetry
+	ProviderRpm
+	ProviderYum
+)
+
+type SearchResult struct {
+	Title       string
+	Description string
+}
+
 func GetBytes(cmd *Cmd) ([]byte, error) {
 	out, err := cmd.CombinedOutput()
 
@@ -49,6 +68,8 @@ func GetProviderType(provider string) ProviderType {
 		return ProviderNpm
 	case "pip":
 		return ProviderPip
+	case "poetry":
+		return ProviderPoetry
 	case "yay":
 		return ProviderYay
 	case "yum":
@@ -74,6 +95,8 @@ func GetProviderStr(managerType ProviderType) string {
 		return "npm (global)"
 	case ProviderPip:
 		return "pip"
+	case ProviderPoetry:
+		return "poetry"
 	case ProviderRpm:
 		return "rpm"
 	case ProviderYum:
@@ -102,12 +125,12 @@ func Sort(results []SearchResult, input string) {
 }
 
 func getFirstSegment(input string) string {
-	segment := strings.SplitN(input, "/", 2)
-	if len(segment) < 2 {
+	segments := strings.SplitN(input, "/", 2)
+	if len(segments) < 2 {
 		return ""
 	}
 
-	return segment[0]
+	return segments[0]
 }
 
 func NewPackageManager(provider ProviderType) PackageManager {
@@ -122,6 +145,8 @@ func NewPackageManager(provider ProviderType) PackageManager {
 		return &Npm{"npm -g"}
 	case ProviderPip:
 		return &Pip{}
+	case ProviderPoetry:
+		return &Poetry{}
 	case ProviderApt:
 		return &Apt{}
 	default:

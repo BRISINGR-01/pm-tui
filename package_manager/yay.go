@@ -20,7 +20,7 @@ func (y Yay) SearchForPackage(input string) ([]SearchResult, error) {
 	lines, err := GetListStr(Command("pacman", "-Ss", input))
 	if err != nil {
 		if err.Error() == "exit status 1: " {
-			return nil, fmt.Errorf("No packages found")
+			return []SearchResult{}, nil
 		}
 		return nil, err
 	}

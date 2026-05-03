@@ -5,8 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
+const SearchThrottle = 600 * time.Millisecond
 const recentPkgFileName = "pm-tui_recent_pkgs"
 
 func AddRecentPkg(name string) {

@@ -36,7 +36,7 @@ func (p Pip) ListInstalled() ([]string, error) {
 }
 
 func (p Pip) SearchForPackage(_ string) ([]SearchResult, error) {
-	return nil, fmt.Errorf("pip does not support search")
+	return nil, fmt.Errorf("PyPI no longer supports 'pip search' (or XML-RPC search). Please use https://pypi.org/search (via a browser) instead. See https://warehouse.pypa.io/api-reference/xml-rpc.html#deprecated-methods for more information.")
 }
 
 func (p Pip) Info(pkg string) (string, error) {

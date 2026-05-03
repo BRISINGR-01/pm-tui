@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:3.12-slim
 
 RUN apt-get update
 RUN apt-get install -y wget git gcc sudo
@@ -14,11 +14,23 @@ RUN rm "/tmp/go${GO_VERSION}.linux-amd64.tar.gz"
 
 ENV PATH /go/bin:/usr/local/go/bin:$PATH
 
+# poetry setup
+ENV POETRY_VERSION=1.8.3 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false
+
+RUN pip install --no-cache-dir poetry
+
 # project setup
 WORKDIR /pm
 
-COPY go.mod go.sum ./
 
+COPY go.mod go.sum ./
 RUN go mod download
 
-CMD go run .
+COPY tests/python/poetry/pyproject.toml tests/python/poetry/pyproject.toml  
+WORKDIR tests/python/poetry/
+RUN poetry install --no-root 
+
+# CMD go run ..
+CMD bash

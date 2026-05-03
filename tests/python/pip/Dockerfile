@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:3.12-slim
 
 RUN apt-get update
 RUN apt-get install -y wget git gcc sudo
@@ -18,7 +18,10 @@ ENV PATH /go/bin:/usr/local/go/bin:$PATH
 WORKDIR /pm
 
 COPY go.mod go.sum ./
+# COPY tests/pip/package.json  ./
 
 RUN go mod download
+
+RUN pip install numpy panda
 
 CMD go run .

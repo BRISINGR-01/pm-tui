@@ -12,21 +12,3 @@ type PackageManager interface {
 	Info(pkg string) (string, error)
 	IsInstalled(pkg string) (bool, error)
 }
-
-type ProviderType int
-
-const (
-	ProviderPacman ProviderType = iota
-	ProviderYay
-	ProviderApt
-	ProviderNpm
-	ProviderNpmGlobal
-	ProviderPip
-	ProviderRpm
-	ProviderYum
-)
-
-type SearchResult struct {
-	Title       string
-	Description string
-}

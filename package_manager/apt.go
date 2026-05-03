@@ -40,6 +40,9 @@ func (a Apt) SearchForPackage(input string) ([]SearchResult, error) {
 	i := slices.IndexFunc(searchResult, func(item string) bool {
 		return strings.Contains(item, "/")
 	})
+	if i < 2 {
+		return results, nil
+	}
 	for ; i < len(searchResult); i += 3 {
 		results = append(results, SearchResult{
 			Title:       getFirstSegment(searchResult[i]),
