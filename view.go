@@ -17,7 +17,7 @@ func (m model) View() tea.View {
 	v.MouseMode = tea.MouseModeCellMotion // turn on mouse support so we can track the mouse wheel
 
 	var b strings.Builder
-	if m.modalContent != "" {
+	if len(m.modalContent) != 0 {
 		v.SetContent(modal(m.modalContent, m.width, m.height))
 		return v
 	}

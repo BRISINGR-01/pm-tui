@@ -66,22 +66,27 @@ func (p Poetry) SearchForPackage(input string) ([]SearchResult, error) {
 }
 
 func (p Poetry) Info(pkg string) (string, error) {
-	return GetStr(Command("poetry", "show", pkg))
+	Log(pkg)
+	if isInstalled, _ := p.IsInstalled(pkg); isInstalled {
+		return GetStr(Command("poetry", "show", pkg))
+	}
+
+	return "", nil
 }
 
 func (p Poetry) Install(pkg string) *Cmd {
 	AddRecentPkg(pkg)
-	return Command("poetry", "install", pkg)
+	return Command("poetry", "add", pkg)
 }
 
 func (p Poetry) UpdatePackage(pkg string) *Cmd {
 	AddRecentPkg(pkg)
-	return Command("poetry", "install", "-U", pkg)
+	return Command("poetry", "update", pkg)
 }
 
 func (p Poetry) Remove(pkg string) *Cmd {
 	AddRecentPkg(pkg)
-	return Command("poetry", "uninstall", pkg)
+	return Command("poetry", "remove", pkg)
 }
 
 func (p Poetry) UpdateSystem() *Cmd {
@@ -116,7 +121,6 @@ func (p Poetry) UpdateSystem() *Cmd {
 	return Command("sh", "-c", command.String())
 }
 
-// Check installed
 func (p Poetry) IsInstalled(pkg string) (bool, error) {
 	cmd := exec.Command("poetry", "show", pkg)
 

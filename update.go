@@ -160,6 +160,7 @@ func handleKeyPress(m model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			m.state = StateListSearchResults
+			m.input = NewSearchView(m.width)
 			return m, nil
 		case "esc":
 			return LoadActions(m)
